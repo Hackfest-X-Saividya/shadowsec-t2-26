@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zday Protocol</title>
+<style>
+/* Built from Ferrari's published design language: near-black #181818 canvas, white editorial bands, hairline rules,
+   0px corners, no shadows, uppercase tracked nav and buttons, one Rosso Corsa red for calls to action, an 8px spacing
+   ladder. FerrariSans is licensed, so a system stack stands in (the CSP allows no web fonts).
+   Every id and generated class below is used by app.js: restyle freely, don't rename. */
+:root{--ink:#181818;--paper:#fff;--soft:#f4f4f4;--rule:#d2d2d2;--mut:#666;
+--canvas:#181818;--elev:#303030;--mut-d:#8f8f8f;
+--brand:#da291c;--brand-active:#b01e0a;--red:#da291c;--danger:#f13a2c;--green:#03904a;--amber:#9a5b00;--focus:#f6e500;
+--sans:Inter,"Helvetica Neue",Helvetica,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 15px/1.55 var(--sans)}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.band.dark{background:var(--canvas);color:#fff}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.band.dark :focus-visible{outline-color:var(--focus)}
+
+/* nav: tabs left, wordmark centred, actions right */
+header.band{position:sticky;top:0;z-index:10;padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid var(--elev)}
+.topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:64px}
+nav{order:1;display:flex;justify-self:start;height:100%}
+.brand{order:2;font:600 13px var(--sans);letter-spacing:.32em;text-transform:uppercase;white-space:nowrap}
+.actions{order:3;display:flex;gap:8px;justify-self:end}
+nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut-d);padding:0 16px;font:600 13px var(--sans);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+nav button:hover{color:#fff}
+nav button.on{color:#fff;border-bottom-color:#fff}
+.actions .btn{padding:10px 16px;font-size:12px}
+@media(max-width:900px){.topbar{display:flex;flex-wrap:wrap;height:auto;gap:0 16px}.brand{order:1;margin-right:auto;padding:20px 0}.actions{order:2}nav{order:3;width:100%;overflow-x:auto;height:56px}}
+
+/* buttons: red primary, outline secondary, sharp corners */
+.btn,select{border:1px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:0;padding:14px 28px;font:600 13px var(--sans);letter-spacing:.05em;text-transform:uppercase;max-width:100%;text-decoration:none}
+select{padding:13px 12px;font:400 14px var(--sans);letter-spacing:0;text-transform:none}
+.btn{cursor:pointer;display:inline-block;line-height:1.2}
+.btn:hover:not(:disabled){background:var(--ink);color:#fff}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.primary,.btn.green{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover:not(:disabled),.btn.green:hover:not(:disabled){background:var(--brand-active);border-color:var(--brand-active)}
+.btn.red{background:var(--ink);color:#fff}
+.btn.red:hover:not(:disabled){background:#000}
+.band.dark .btn:not(.primary){background:transparent;color:#fff;border-color:#fff}
+.band.dark .btn:not(.primary):hover:not(:disabled){background:#fff;color:var(--ink)}
+.cta{padding:18px 36px}
+
+/* hero: text sits bottom-left, like the site's photo heroes */
+.hero{min-height:min(78vh,760px);display:flex;align-items:flex-end;padding:96px 0 64px}
+.hero .wrap{width:100%}
+.hero h1{margin:0;font-size:clamp(40px,7.4vw,92px);line-height:1;font-weight:500;letter-spacing:-.025em;max-width:13em}
+.hero p.lead{margin:24px 0 40px;color:#c8c8c8;font-size:18px;max-width:46ch}
+.hero .btns{display:flex;flex-wrap:wrap;gap:16px}
+
+/* numbers band */
+.stats-band{border-top:1px solid var(--elev)}
+.stats{display:flex;flex-wrap:wrap}
+.stat{flex:1 1 140px;min-width:0;padding:40px 32px 32px 0;margin-right:32px;border-right:1px solid var(--elev)}
+.stat.trust{flex:2 1 320px}
+#counts .stat:last-child{border-right:0;margin-right:0}
+.stat b{display:block;font:700 clamp(44px,6vw,80px)/1 var(--sans);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.stat span{display:block;margin-top:12px;font:600 12px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mut-d)}
+.stat.Open b{color:var(--danger)}.stat.Fixed b{color:#e0a100}.stat.Verified b{color:#2fbf71}
+.counts{display:contents}
+.meter{height:3px;background:var(--elev);margin-top:20px}
+.meter i{display:block;height:100%;background:#fff;transition:width .6s}
+.target{margin:0;padding:0 0 32px;font:12px var(--mono);color:var(--mut-d);overflow-wrap:anywhere}
+@media(max-width:640px){.stat{flex:1 1 30%;margin-right:0;padding:24px 12px 20px}.stat.trust{flex:1 1 100%;padding-left:0;border-right:0}#counts .stat:first-child{padding-left:0}}
+
+/* white work area */
+main{padding:64px 0 96px}
+.c{margin:0 0 12px;font:400 12px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.h2{margin:0 0 32px;font-size:clamp(28px,4vw,48px);line-height:1.08;font-weight:500;letter-spacing:-.02em;max-width:22ch}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px}
+.spacer{flex:1}
+.privacy{border-left:2px solid var(--ink);padding:2px 0 2px 16px;margin:0 0 48px;color:var(--mut);max-width:72ch}
+
+/* editor and panels */
+.term{background:var(--paper);border:1px solid var(--rule);min-width:0}
+.term.drag{border-color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+.term-head{padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--soft);font:600 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mut);overflow-wrap:anywhere}
+.term-body{padding:16px}
+.term-foot{padding:12px 16px;border-top:1px solid var(--rule);background:var(--soft);font:12px var(--mono);color:var(--mut)}
+.term-foot b{color:var(--danger)}.term-foot b.ok{color:var(--green)}
+textarea{display:block;width:100%;min-height:280px;max-height:60vh;resize:vertical;background:var(--paper);color:var(--ink);border:0;border-radius:0;padding:16px;font:13px/1.6 var(--mono);tab-size:4}
+textarea:focus-visible{outline-offset:-3px}
+.term.dark{background:var(--canvas);border-color:var(--canvas);color:#eee}
+.term.dark .term-head{background:#202020;border-color:var(--elev);color:var(--mut-d)}
+.banner{border-left:3px solid var(--rule);background:var(--soft);padding:16px 20px;font-weight:600;margin:16px 0;overflow-wrap:anywhere}
+.banner.bad{border-color:var(--danger);background:#fdecea;color:#7a140d}
+.banner.good{border-color:var(--green);background:#e4f3ea;color:#0c4a28}
+.banner.warn{border-color:var(--amber);background:#fbf0da;color:#613800}
+
+/* claims table */
+.scroll{overflow-x:auto}.scroll table{min-width:1180px}
+table{width:100%;border-collapse:collapse}
+th{font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.12em;text-align:left;padding:12px 16px 12px 0;border-bottom:2px solid var(--ink)}
+td{padding:16px 16px 16px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+tr.fix td:first-child{box-shadow:inset 3px 0 0 var(--danger);padding-left:16px}
+tr.ok td{opacity:.7}
+code,.mono{font-family:var(--mono);font-size:12.5px}
+.claim{color:var(--mut)}.sm{font-size:12.5px;color:var(--mut)}
+.score{display:flex;align-items:center;gap:10px;min-width:110px;font-family:var(--mono)}
+.score .bar{flex:1;height:4px;background:var(--rule)}.score .bar i{display:block;height:100%}
+.chip{display:inline-block;padding:2px 8px;border:1px solid currentColor;color:var(--mut);font:600 10.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.chip.Open{color:var(--danger)}.chip.Fixed,.chip.Medium{color:var(--amber)}
+.chip.Verified,.chip.Honest,.chip.Closed{color:var(--green)}
+.chip.Critical,.chip.P1{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip.High,.chip.P2{color:#b3470a}
+.open-lab{white-space:nowrap;padding:10px 16px}
+.empty{padding:48px 10px;color:var(--mut);text-align:center}
+
+/* source view */
+.src{max-height:420px;overflow:auto;font:12px/1.6 var(--mono)}
+.src div{display:flex;white-space:pre}
+.src b{flex:0 0 3.4em;text-align:right;padding-right:12px;color:#9a9a96;font-weight:400;user-select:none}
+.src span{padding-right:14px}
+.src .liar{background:#fbe3e0}.src .liar b{color:var(--danger)}
+.src .honest{background:#e3f1e6}.src .honest b{color:var(--green)}
+
+/* attack lab */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}.split>*{min-width:0}
+@media(max-width:800px){.split{grid-template-columns:1fr}}
+.payload{padding:8px 10px;border:1px dashed #555;margin-bottom:12px;overflow-wrap:anywhere}
+.log{display:flex;flex-direction:column;gap:4px;max-height:360px;min-height:200px;overflow:auto}
+.log div{padding:4px 10px;border-left:3px solid #444;font:12px var(--mono);overflow-wrap:anywhere}
+.log .attacker{border-color:var(--danger);color:#ff9d94}.log .app{border-color:#8a8a8a}
+.log .ok{border-color:#3fb765;color:#9fe3b3}.log .bad{border-color:var(--danger);color:#ff9d94}
+.users td,.users th{padding:8px 10px 8px 0}
+.users tr.leak td{background:#fbe3e0;color:#7a140d;transition:background .4s}
+.resp{margin-top:16px;padding:12px;background:var(--soft);min-height:40px;color:var(--mut);overflow-wrap:anywhere}
+.tag{font:600 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;border:1px solid var(--rule);color:var(--mut);overflow-wrap:anywhere}
+details{margin-top:16px}summary{cursor:pointer;color:var(--mut)}
+pre{background:var(--soft);border:1px solid var(--rule);padding:12px;overflow:auto;font-size:12px}
+
+/* how it works */
+.sect{margin-top:96px;scroll-margin-top:88px}
+.how{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 32px;counter-reset:s}
+.how li{counter-increment:s;border-top:1px solid var(--ink);padding:16px 0 24px}
+.how li::before{content:counter(s,decimal-leading-zero);display:block;font:500 13px var(--sans);letter-spacing:.14em;color:var(--mut);margin-bottom:32px}
+.how h3{margin:0 0 8px;font-size:20px;font-weight:500;letter-spacing:-.01em}.how p{margin:0;color:var(--mut)}
+
+/* red livery band, then the footer */
+.livery{background:var(--brand);color:#fff;padding:64px 0}
+.livery p{margin:0;font:500 clamp(26px,3.6vw,40px)/1.15 var(--sans);letter-spacing:-.02em}
+footer.band{padding:32px 0 calc(32px + env(safe-area-inset-bottom,0px));color:var(--mut-d);font-size:13px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.meter i,.users tr.leak td{transition:none}}
+</style>
+</head>
+<body>
+<header class="band dark">
+  <div class="wrap topbar">
+    <div class="brand">Zday Protocol</div>
+    <nav>
+      <button class="on" type="button" data-tab="analyze">Analyze</button>
+      <button type="button" data-tab="claims">Claims vs Reality</button>
+      <button type="button" data-tab="lab">Attack Lab</button>
+    </nav>
+    <div class="actions">
+      <button class="btn" id="exportBtn" type="button">Export JSON</button>
+      <button class="btn" id="resetBtn" type="button">Reset</button>
+    </div>
+  </div>
+</header>
+
+<section class="band dark hero" id="hero">
+  <div class="wrap">
+    <h1>Does your code do what it says?</h1>
+    <p class="lead">Some security functions only have the name. We find them, attack them to prove it, then fix them and attack again.</p>
+    <div class="btns">
+      <button class="btn primary cta" id="ctaBtn" type="button">Check your code</button>
+      <a class="btn cta" href="#how">How it works</a>
+    </div>
+  </div>
+</section>
+
+<section class="band dark stats-band">
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat trust"><b id="trustNow">-</b><span>Repo trust score <span id="trustBefore"></span></span><div class="meter"><i id="meter" style="width:0"></i></div></div>
+      <div class="counts" id="counts"></div>
+    </div>
+    <p class="target" id="target">Paste or upload code to check its security claims.</p>
+  </div>
+</section>
+
+<div class="wrap">
+<main>
+  <section id="analyze">
+    <p class="c">Step one</p>
+    <h2 class="h2">Check your code</h2>
+    <p class="privacy">Your code stays in this browser tab. It is read as text and is never run or uploaded. Real attacks only run against the bundled Python sample, in a throwaway sandbox. Anything else gets a prediction, labelled as one.</p>
+    <div class="toolbar">
+      <select id="example" aria-label="Load an example"><option value="">Load an example...</option></select>
+      <select id="lang" aria-label="Language"><option value="auto">Language: auto-detect</option><option value="python">Python</option><option value="javascript">JavaScript</option><option value="typescript">TypeScript</option><option value="java">Java</option><option value="php">PHP</option><option value="go">Go</option><option value="csharp">C#</option><option value="ruby">Ruby</option></select>
+      <label class="btn" for="file">Upload file</label><input type="file" id="file" hidden accept=".py,.js,.mjs,.cjs,.jsx,.ts,.tsx,.java,.php,.go,.cs,.rb,.txt">
+      <span class="spacer"></span>
+      <button class="btn primary" id="analyzeBtn" type="button">Analyze</button>
+    </div>
+    <div class="term" id="editor">
+      <div class="term-head">input</div>
+      <textarea id="code" spellcheck="false" aria-label="Code to analyze" placeholder="Paste code here, drop a file on this box, or load an example. Functions named like sanitize, validate, verify, auth, escape, clean, hash or encrypt are checked against what their code really does."></textarea>
+    </div>
+    <div class="banner" id="status">Ready.</div>
+
+    <div class="term" id="srcPanel" hidden>
+      <div class="term-head" id="srcName">code</div>
+      <div class="src" id="src"></div>
+      <div class="term-foot" id="srcFoot"></div>
+    </div>
+
+    <div class="sect" id="how">
+      <p class="c">The method</p>
+      <h2 class="h2">How it works</h2>
+      <ol class="how">
+        <li><h3>Read the claim</h3><p>A function called verify_token promises to verify something. We take note of what its name and comment promise.</p></li>
+        <li><h3>Compare to the code</h3><p>Then we read what it does and score the gap: a Lie Score, a CVSS 3.1 severity and an OWASP category.</p></li>
+        <li><h3>Attack it</h3><p>The bundled sample is attacked for real in a sandbox. Your own code gets a prediction, marked as one.</p></li>
+        <li><h3>Fix and attack again</h3><p>Apply the patch and replay the same attack. If it is blocked, the fix is verified.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="claims" hidden>
+    <p class="c">Step two</p>
+    <h2 class="h2">Claims vs reality</h2>
+    <div class="toolbar">
+      <select id="fStatus" aria-label="Filter by status"><option value="">All statuses</option><option>Open</option><option>Fixed</option><option>Verified</option><option>Honest</option></select>
+      <select id="fSev" aria-label="Filter by severity"><option value="">All severities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+      <span class="sm">Every function whose name makes a security claim, judged on what its code does.</span>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Function</th><th>Claims</th><th>Reality</th><th>Lie Score</th><th>CVSS 3.1</th><th>Exploit likelihood</th><th>Priority</th><th>OWASP</th><th>Status</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="lab" hidden>
+    <p class="c">Step three</p>
+    <h2 class="h2">Attack lab</h2>
+    <div class="toolbar">
+      <select id="pick" aria-label="Finding to attack"></select>
+      <span class="tag" id="mode">-</span>
+      <span class="spacer"></span>
+      <button class="btn red" id="simBtn" type="button">Simulate Attack</button>
+      <button class="btn green" id="fixBtn" type="button">Apply Fix</button>
+    </div>
+    <div class="banner" id="banner">Pick a finding and click Simulate Attack.</div>
+    <div class="split">
+      <div class="term dark">
+        <div class="term-head">Attacker</div>
+        <div class="term-body"><div class="payload mono" id="payload"></div><div class="log" id="log"></div></div>
+      </div>
+      <div class="term">
+        <div class="term-head" id="appHead">The app &middot; users table (fake data)</div>
+        <div class="term-body">
+          <table class="users" id="usersTable"><thead><tr><th>id</th><th>username</th><th>email</th></tr></thead><tbody id="users"></tbody></table>
+          <div class="resp mono" id="resp">No request yet.</div>
+        </div>
+      </div>
+    </div>
+    <details id="patchBox" hidden><summary>Patch applied by Apply Fix</summary><pre id="patch"></pre></details>
+  </section>
+</main>
+</div>
+
+<section class="livery"><div class="wrap"><p>Attack it. Fix it. Attack it again.</p></div></section>
+<footer class="band dark">
+  <div class="wrap">Zday Protocol. Your code is read as text in this tab and never uploaded or executed.</div>
+</footer>
+<script src="/analyzer.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

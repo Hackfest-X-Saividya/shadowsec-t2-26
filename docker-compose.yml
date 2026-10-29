@@ -1,0 +1,31 @@
+# Run everything in Docker:   docker compose up --build        -> http://127.0.0.1:8000
+# Stop:                       docker compose down
+#
+# `app` runs the dashboard AND the attack sandbox inside one hardened container (read-only root, no capabilities,
+# non-root user, resource caps). The port is published on the host's 127.0.0.1 only.
+# `sandbox` is the optional per-attack image used by the host-run mode (./scripts/run-docker-sandbox.sh).
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: zday-protocol-app:latest
+    container_name: zday-protocol
+    ports:
+      - "127.0.0.1:8000:8000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile.sandbox
+    image: zday-protocol-sandbox:latest
+    profiles: ["build-only"]

@@ -1,0 +1,10 @@
+.git
+__pycache__
+*.pyc
+*.zip
+*.html
+!static/*.html
+node_modules
+test_*
+selftest.py
+build_demo.py

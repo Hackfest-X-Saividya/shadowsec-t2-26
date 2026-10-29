@@ -1,0 +1,3 @@
+# The sandbox image needs exactly one file. Keep everything else out of the build context.
+*
+!sandbox_runner.py
